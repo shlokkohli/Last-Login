@@ -2,17 +2,40 @@ import React, { useState } from 'react'
 import Input from '../components/Input.jsx'
 import PasswordStrengthMeter from '../components/PasswordStrengthMeter.jsx'
 import { motion } from 'framer-motion'
-import { User, Mail, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { User, Mail, Lock, Loader } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { signupUser } from "../features/auth/authSlice.js";
+import { useSelector, useDispatch } from "react-redux";
 
 function SignUpPage() {
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { loading, error } = useSelector((state) => state.auth);
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault();
+
+    try {
+
+      // send (dispatch) the user data
+      await dispatch(signupUser(name, email, password));
+
+      // clear the form
+      setName("")
+      setEmail("")
+      setPassword("")
+
+      // re-direct the user to verify email address page
+      navigate("/verify-email")
+    } catch (error) {
+      console.log(`Signup failed: ${error}`);
+    }
   }
 
   return (
@@ -52,6 +75,9 @@ function SignUpPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           />
+          {/* show errors if they exist */}
+
+          {error && <p className='text-red-500 font-semibold mt-2'>${error}</p>}
           
           <PasswordStrengthMeter password={password} />
 
@@ -62,8 +88,9 @@ function SignUpPage() {
           whileHover={{scale: 1.02}}
           whileTap={{scale: 0.98}}
           type='submit'
+          disabled={loading}
           >
-            Sign Up
+            {loading ? <Loader className='animate-spin mx-auto' size={24} /> : "Sign Up" }
           </motion.button>
         </form>
       </div>

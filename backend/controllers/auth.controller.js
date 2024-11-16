@@ -21,7 +21,7 @@ const generateAccessAndRefreshTokens = async(userId) => {
     } catch (error) {
       throw new ApiError(500, "Something went wrong while generating refresh and access token")
     }
-  }
+}
 
 const registerUser = asyncHandler(async (req, res) => {
 
