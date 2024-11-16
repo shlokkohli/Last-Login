@@ -16,8 +16,6 @@ function Input({icon: Icon, type, placeholder, value, onChange}) {
         onChange={onChange}
         />
 
-        {/* Password strengeth meter */}
-
     </div>
   )
 }
