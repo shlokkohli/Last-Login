@@ -2,7 +2,9 @@ import { Routes, Route } from 'react-router-dom';
 import FloatingShape from './components/FloatingShape';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
+import Home from './pages/Home';
 import EmailVerificationPage from './pages/EmailVerificationPage';
+import toast, { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
@@ -15,10 +17,12 @@ function App() {
 
       {/* routes for different pages */}
       <Routes>
+      <Route path="/" element={<Home />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path='verify-email' element={<EmailVerificationPage />}/>
       </Routes>
+      <Toaster />
     </div>
   );
 }

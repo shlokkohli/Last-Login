@@ -6,7 +6,8 @@ const initialState = {
     isAuthenticate: false,
     token: null,
     loading: false,
-    error: null
+    error: null,
+    emailVerified: false
 }
 
 export const authSlice = createSlice({
@@ -18,48 +19,62 @@ export const authSlice = createSlice({
             state.error = null;
         },
 
-        signupSuccess: (state, payload) => {
+        signupSuccess: (state, action) => {
             state.user = action.payload.user;
             state.isAuthenticate = true;
             state.token = action.payload.token;
             state.loading = false;
         },
 
-        signupFailure: (action, payload) => {
+        signupFailure: (state, action) => {
             state.loading = false;
             state.error = action.payload;
         },
 
-        login: (action, payload) => {
+        login: (state, action) => {
 
         },
 
-        logout: (action, payload) => {
+        logout: (state, action) => {
 
         },
 
-        verifyEmail: (action, payload) => {
+        verifyEmailStart: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        verifyEmailSuccess: (state) => {
+            state.emailVerified = true;
+            state.loading = false;
+            if (state.user){
+                state.user.isVerified = true;
+            }
+        },
+
+        verifyEmailFailure: (state, action) => {
+            state.error = action.payload;
+            state.loading = false;
+        },
+
+        checkAuth: (state, action) => {
 
         },
 
-        checkAuth: (action, payload) => {
+        forgotPassword: (state, action) => {
 
         },
 
-        forgotPassword: (action, payload) => {
-
-        },
-
-        resetPassword: (action, payload) => {
+        resetPassword: (state, action) => {
 
         }
     }
 })
 
-export const {signupStart, signupSuccess, signupFailure} = authSlice.actions;
+export const {signupStart, signupSuccess, signupFailure, verifyEmailStart, verifyEmailSuccess, verifyEmailFailure } = authSlice.actions;
 export default authSlice.reducer;
 
-const API_URL = "http://localhost:3000/api";
+const API_URL = "http://localhost:3000/api/auth";
 
 axios.defaults.withCredentials = true;
 
@@ -67,9 +82,7 @@ export const signupUser = (name, email, password) => async (dispatch) => {
     dispatch(signupStart());
     try {
         // take the user data from the post request
-        const response = await axios.post(`${API_URL}/auth/register`, {username: name, email, password});
-
-        console.log(response)
+        const response = await axios.post(`${API_URL}/register`, {username: name, email, password});
         // we have taken the user data, now save it in the store
         dispatch(signupSuccess({
             user: response.data.user,
@@ -77,7 +90,19 @@ export const signupUser = (name, email, password) => async (dispatch) => {
             refreshToken: response.data.refreshToken,
         }))
     } catch (error) {
-        const errorMessage = error.response.data.message || "Error signing up"
-        console.log(errorMessage);
+        const errorMessage = error.response?.data?.message || "Error occured during signing in user";
+        dispatch(signupFailure(errorMessage));
+    }
+}
+
+export const verifyEmail = (otp) => async (dispatch) => {
+    dispatch(verifyEmailStart());
+    try {
+        const response = await axios.post(`${API_URL}/verify-email`, { code: otp });
+        // we have taken the user otp, now send confirmation to server that everything is done fine
+        dispatch(verifyEmailSuccess());
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Error occuring during email verification";
+        dispatch(verifyEmailFailure(errorMessage));
     }
 }

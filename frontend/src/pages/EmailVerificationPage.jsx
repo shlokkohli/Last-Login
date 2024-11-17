@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams, useViewTransitionState } from "react-router-dom";
+import toast, { Toaster } from 'react-hot-toast';
 import { motion } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
+import { verifyEmail } from "../features/auth/authSlice.js";
 
 const EmailVerificationPage = () => {
+
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
+
 	const [code, setCode] = useState(["", "", "", "", "", ""]);
 	const inputRefs = useRef([]);
-	const navigate = useNavigate();
     
     const isLoading = false;
+
+	const { loading, error,emailVerified } = useSelector((state) => state.auth);
 
 	const handleChange = (index, value) => {
 		const newCode = [...code];
@@ -41,17 +49,24 @@ const EmailVerificationPage = () => {
 		}
 	};
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		const verificationCode = code.join("");
-	};
+    useEffect(() => {
+        if (emailVerified && !error) {
+            toast.success("Email Verified Successfully");
+            navigate("/");
+        }
+    }, [emailVerified, error, navigate]);
 
-	// Auto submit when all fields are filled
-	useEffect(() => {
-		if (code.every((digit) => digit !== "")) {
-			handleSubmit(new Event("submit"));
-		}
-	}, [code]);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const verificationCode = code.join("");
+		
+        try {
+            await dispatch(verifyEmail(verificationCode));
+        } catch (error) {
+            const errorMessage = error?.response?.data?.message || "Verification failed";
+            toast.error(errorMessage);
+        }
+    };
 
 	return (
 		<div className='max-w-md w-full bg-gray-800 bg-opacity-50 backdrop-filter backdrop-blur-xl rounded-2xl shadow-xl overflow-hidden'>
@@ -82,6 +97,8 @@ const EmailVerificationPage = () => {
 							/>
 						))}
 					</div>
+					
+					{error && <p className='text-red-500 font-semibold mt-2'>{error}</p>}
 
                     <motion.button
 						whileHover={{ scale: 1.05 }}
