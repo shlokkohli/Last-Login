@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { registerUser, loginUser, logoutUser, verifyEmail, forgotPassword, resetPassword } from "../controllers/auth.controller.js";
 import { verifyJWT } from "../middlewares/verifyJwt.middleware.js";
+import { sendUserData } from "../middlewares/sendUserData.middleware.js"
 
 const router = Router();
 
-router.route("/check-auth").get(verifyJWT)
+router.route("/check-auth").get(verifyJWT, sendUserData)
 
 router.route("/register").post(registerUser)
 router.route("/verify-email").post(verifyEmail)

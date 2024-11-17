@@ -3,11 +3,12 @@ import axios from "axios"
 
 const initialState = {
     user: null,
-    isAuthenticate: false,
+    isAuthenticated: false,
     token: null,
     loading: false,
     error: null,
-    emailVerified: false
+    emailVerified: false,
+    isCheckingAuth: true,
 }
 
 export const authSlice = createSlice({
@@ -21,7 +22,7 @@ export const authSlice = createSlice({
 
         signupSuccess: (state, action) => {
             state.user = action.payload.user;
-            state.isAuthenticate = true;
+            state.isAuthenticated = true;
             state.token = action.payload.token;
             state.loading = false;
         },
@@ -57,8 +58,21 @@ export const authSlice = createSlice({
             state.loading = false;
         },
 
-        checkAuth: (state, action) => {
+        checkAuthStart: (state) => {
+            state.error = null;
+        },
 
+        checkAuthSuccess: (state, action) => {
+            state.isCheckingAuth = false;
+            state.isAuthenticated = true;
+            state.user = action.payload.user;
+            state.token = action.payload.token;
+        },
+
+        checkAuthFailure: (state, action) => {
+            state.error = action.payload;
+            state.isCheckingAuth = false;
+            state.isAuthenticated = false;
         },
 
         forgotPassword: (state, action) => {
@@ -71,7 +85,9 @@ export const authSlice = createSlice({
     }
 })
 
-export const {signupStart, signupSuccess, signupFailure, verifyEmailStart, verifyEmailSuccess, verifyEmailFailure } = authSlice.actions;
+export const {signupStart, signupSuccess, signupFailure, verifyEmailStart, verifyEmailSuccess, verifyEmailFailure,
+    checkAuthStart, checkAuthSuccess, checkAuthFailure
+ } = authSlice.actions;
 export default authSlice.reducer;
 
 const API_URL = "http://localhost:3000/api/auth";
@@ -104,5 +120,27 @@ export const verifyEmail = (otp) => async (dispatch) => {
     } catch (error) {
         const errorMessage = error.response?.data?.message || "Error occuring during email verification";
         dispatch(verifyEmailFailure(errorMessage));
+    }
+}
+
+export const checkAuth = () => async (dispatch) => {
+    dispatch(checkAuthStart());
+    try {
+
+        const token = localStorage.getItem('accessToken');
+
+        // make an api call to check if the user is authenticated
+        const response = await axios.get(`${API_URL}/check-auth`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        dispatch(checkAuthSuccess({
+            user: response.data.data.user,
+            token: token,
+        }));
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Error occuring while checking auth";
+        dispatch(checkAuthFailure(errorMessage));
     }
 }
