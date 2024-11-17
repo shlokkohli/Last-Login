@@ -4,7 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js"
 
-// middlewares/auth.middleware.js
+
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   try {
       const token = req.cookies.accessToken || (req.header("Authorization") && req.header("Authorization").replace("Bearer ", ""));
@@ -22,7 +22,6 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
       }
 
       req.user = user;
-      // Only call next(), don't send response here
       next();
       
   } catch (error) {

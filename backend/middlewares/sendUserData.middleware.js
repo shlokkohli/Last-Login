@@ -10,7 +10,6 @@ export const sendUserData = asyncHandler(async (req, res) => {
         throw new ApiError(401, "User not found");
     }
 
-    // Only send response here
     return res.json(new ApiResponse(200, {
         user
     }, "User data fetched successfully"))

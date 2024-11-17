@@ -17,9 +17,15 @@ function SignUpPage() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [formError, setFormError] = useState("")
 
   const handleSignUp = async (e) => {
     e.preventDefault();
+
+    if (!name || !email || !password) {
+      setFormError("Please fill all the fields.");
+      return;
+    }
 
     try {
 
@@ -77,7 +83,15 @@ function SignUpPage() {
           />
           {/* show errors if they exist */}
 
-          {error && <p className='text-red-500 font-semibold mt-2'>${error}</p>}
+          {formError && <p className='text-red-500 font-semibold mt-2'>{formError}</p>}
+          
+          {error && (
+            <p className='text-red-500 font-semibold mt-2'>
+              {typeof error === 'string' && 
+              (error.includes('Invalid') || error.includes('jwt') || error.includes("No token found. User is not authenticated")) 
+              ? '' : error}
+            </p>
+          )}
           
           <PasswordStrengthMeter password={password} />
 

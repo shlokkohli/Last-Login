@@ -98,8 +98,13 @@ const EmailVerificationPage = () => {
 						))}
 					</div>
 					
-					{error && <p className='text-red-500 font-semibold mt-2'>{error}</p>}
-
+					{error && (
+						<p className='text-red-500 font-semibold mt-2'>
+							{typeof error === 'string' && 
+							(error.includes('Invalid') || error.includes('jwt') || error.includes("No token found. User is not authenticated")) 
+							? '' : error}
+						</p>
+					)}
                     <motion.button
 						whileHover={{ scale: 1.05 }}
 						whileTap={{ scale: 0.95 }}

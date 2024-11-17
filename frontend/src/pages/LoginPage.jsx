@@ -3,16 +3,20 @@ import { motion } from 'framer-motion'
 import {Mail, Lock, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom'
 import Input from '../components/Input.jsx'
+import { loginUser } from '../features/auth/authSlice.js';
+import { useSelector, useDispatch } from "react-redux";
 
 function LoginPage() {
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
-  const isLoading = false;
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    await dispatch(loginUser(email, password));
   }
 
   return (
@@ -53,6 +57,14 @@ function LoginPage() {
 						</Link>
 					</div>
 
+          {error && (
+            <p className='text-red-500 font-semibold mt-2'>
+              {typeof error === 'string' && 
+              (error.includes('jwt') || error.includes("No token found. User is not authenticated")) 
+              ? '' : error}
+            </p>
+          )}
+          
           <motion.button
 						whileHover={{ scale: 1.02 }}
 						whileTap={{ scale: 0.98 }}
@@ -60,9 +72,9 @@ function LoginPage() {
             shadow-lg hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 
             focus:ring-offset-2 focus:ring-offset-gray-900 transition duration-200'
 						type='submit'
-            disabled={isLoading}>
+            disabled={loading}>
 
-              {isLoading ? <Loader className='w-6 h-6 animate-spin mx-auto' /> : "Login"}
+              {loading ? <Loader className='w-6 h-6 animate-spin mx-auto' /> : "Login"}
 
           </motion.button>
         </form>

@@ -1,8 +1,9 @@
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import FloatingShape from './components/FloatingShape';
+import LoadingSpinner from './components/LoadingSpinner.jsx';
 import SignUpPage from './pages/SignUpPage';
 import LoginPage from './pages/LoginPage';
-import Home from './pages/Home';
+import DashBoardPage from './pages/DashBoardPage.jsx';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import toast, { Toaster } from 'react-hot-toast';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,16 +21,36 @@ function App() {
   }, [dispatch])
 
   // redirect authenticated user to home page
-  const RedirectAuthenticatedUser = ({children}) => {
-    if(isAuthenticated && user.isVerified){
-      // take to the home page from the current page
-      navigate('/', { replace: true });
+  const RedirectAuthenticatedUser = ({ children }) => {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      if (isAuthenticated && user && user.isVerified) {
+        navigate('/', { replace: true });
+      }
+    }, [navigate]);
+
+    return children;
+  };
+
+  // protect routes that require authentication
+  const ProtectedRoute = ({children}) => {
+
+    if(!isAuthenticated){
+      navigate('/login', {replace: true });
       return null;
     }
+
+    if(!user.isVerified){
+      navigate('/verify-email', { replace: true });
+      return null;
+    }
+    return children;
   }
 
-  console.log("Isauthenticated", isAuthenticated);
-  console.log("User", user);
+  if(isCheckingAuth){
+    return <LoadingSpinner />
+  }
 
 
   return (
@@ -42,7 +63,7 @@ function App() {
 
       {/* routes for different pages */}
       <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={ <ProtectedRoute> <DashBoardPage /> </ProtectedRoute>} />
         <Route path="/signup" element={ <RedirectAuthenticatedUser> <SignUpPage /> </RedirectAuthenticatedUser> } />
         <Route path="/login" element={ <RedirectAuthenticatedUser> <LoginPage /> </RedirectAuthenticatedUser> } />
         <Route path='verify-email' element={<EmailVerificationPage />}/>

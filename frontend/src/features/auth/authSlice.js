@@ -32,12 +32,38 @@ export const authSlice = createSlice({
             state.error = action.payload;
         },
 
-        login: (state, action) => {
-
+        loginStart: (state, action) => {
+            state.loading = true;
+            state.error = null;
         },
 
-        logout: (state, action) => {
+        loginSuccess: (state, action) => {
+            state.isAuthenticated = true;
+            state.user = action.payload.user;
+            state.token = action.payload.token;
+            state.loading = false;
+        },
 
+        loginFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        },
+
+        logoutStart: (state) => {
+            state.loading = true;
+            state.error = null;
+        },
+
+        logoutSuccess: (state,) => {
+            state.user = null;
+            state.isAuthenticated = false;
+            state.error = null;
+            state.loading = false;
+        },
+
+        logoutFailure: (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
         },
 
         verifyEmailStart: (state) => {
@@ -86,7 +112,7 @@ export const authSlice = createSlice({
 })
 
 export const {signupStart, signupSuccess, signupFailure, verifyEmailStart, verifyEmailSuccess, verifyEmailFailure,
-    checkAuthStart, checkAuthSuccess, checkAuthFailure
+    checkAuthStart, checkAuthSuccess, checkAuthFailure, loginStart, loginSuccess, loginFailure, logoutStart, logoutSuccess, logoutFailure
  } = authSlice.actions;
 export default authSlice.reducer;
 
@@ -129,6 +155,12 @@ export const checkAuth = () => async (dispatch) => {
 
         const token = localStorage.getItem('accessToken');
 
+        if (!token) {
+            console.log("No token found. User is not authenticated")
+            dispatch(checkAuthFailure("No token found. User is not authenticated"))
+            return;
+        }
+
         // make an api call to check if the user is authenticated
         const response = await axios.get(`${API_URL}/check-auth`, {
             headers: {
@@ -140,7 +172,42 @@ export const checkAuth = () => async (dispatch) => {
             token: token,
         }));
     } catch (error) {
-        const errorMessage = error.response?.data?.message || "Error occuring while checking auth";
+        console.error('Error object:', error);
+        const errorMessage = error.response?.data?.message || "Error occured while checking auth";
+        console.log(errorMessage)
         dispatch(checkAuthFailure(errorMessage));
+    }
+};
+
+export const loginUser = (email, password) => async (dispatch) => {
+    dispatch(loginStart());
+    try {
+        const response = await axios.post(`${API_URL}/login`, { email, password });
+        
+        // save the token to the local storage if needed
+        localStorage.setItem('accessToken', response.data.data.accessToken);
+
+        console.log(response.data)
+
+        dispatch(loginSuccess({
+            user: response.data.data.user,
+            accessToken: response.data.data.accessToken,
+            refreshToken: response.data.data.refreshToken,
+        }));
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Login failed. Please try again";
+        dispatch(errorMessage);
+    }
+}
+
+export const logoutUser = () => async (dispatch) => {
+    dispatch(logoutStart());
+    try {
+        await axios.post(`${API_URL}/logout`);
+        dispatch(logoutSuccess());
+        localStorage.removeItem('accessToken');
+    } catch (error) {
+        const errorMessage = error.response?.data?.message || "Error logging out. Please try again.";
+        dispatch(logoutFailure(errorMessage));
     }
 }
